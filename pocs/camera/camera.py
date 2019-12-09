@@ -249,6 +249,11 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
     @property
     def is_ready(self):
         """ True if camera is ready to start another exposure, otherwise False. """
+        
+        # Make sure there isn't an exposure already in progress.
+        if self.is_exposing:
+            return False
+        
         # For cooled camera expect stable temperature before taking exposure
         if self.is_cooled_camera and not self.is_temperature_stable:
             return False
@@ -257,10 +262,6 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
         for sub_name in self._subcomponent_names:
             if getattr(self, sub_name) and not getattr(self, sub_name).is_ready:
                 return False
-
-        # Make sure there isn't an exposure already in progress.
-        if self.is_exposing:
-            return False
 
         return True
 
