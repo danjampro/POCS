@@ -17,25 +17,22 @@ from pocs.camera.fli import Camera as FLICamera
 from pocs.camera.zwo import Camera as ZWOCamera
 from pocs.camera import create_cameras_from_config
 from pocs.focuser.simulator import Focuser
-from pocs.scheduler.field import Field
-from pocs.scheduler.observation import Observation
+# from pocs.scheduler.field import Field
+# from pocs.scheduler.observation import Observation
 from pocs.utils.config import load_config
 from pocs.utils.error import NotFound
 from pocs.utils.images import fits as fits_utils
 from pocs.utils import error
 from pocs import hardware
 
-
-params = [SimCamera, SimCamera, SimCamera, SimSDKCamera, SBIGCamera, FLICamera, ZWOCamera]
-ids = ['simulator', 'simulator_focuser', 'simulator_filterwheel', 'simulator_sdk',
-       'sbig', 'fli', 'zwo']
+params = [ZWOCamera]
+ids = ['zwo']
 
 
 @pytest.fixture(scope='module')
 def images_dir(tmpdir_factory):
     directory = tmpdir_factory.mktemp('images')
     return str(directory)
-
 
 # Ugly hack to access id inside fixture
 @pytest.fixture(scope='module', params=zip(params, ids), ids=ids)
@@ -60,25 +57,10 @@ def camera(request, images_dir):
         camera = SimSDKCamera(serial_number='SSC101')
     else:
         # Load the local config file and look for camera configurations of the specified type
-        configs = []
-        local_config = load_config('pocs_local', ignore_local=True)
-        camera_info = local_config.get('cameras')
-        if camera_info:
-            # Local config file has a cameras section
-            camera_configs = camera_info.get('devices')
-            if camera_configs:
-                # Local config file camera section has a devices list
-                for camera_config in camera_configs:
-                    if camera_config and camera_config['model'] == request.param[1]:
-                        # Camera config is the right type
-                        configs.append(camera_config)
-
-        if not configs:
-            pytest.skip(
-                "Found no {} configs in pocs_local.yaml, skipping tests".format(request.param[1]))
+        config = load_config('huntsman_local', ignore_local=True)
 
         # Create and return an camera based on the first config
-        camera = request.param[0](**configs[0])
+        camera = request.param[0](**config)
 
     camera.config['directories']['images'] = images_dir
     return camera
@@ -491,6 +473,7 @@ def test_exposure_timeout(camera, tmpdir, caplog):
     assert exposure_event.is_set()
 
 
+@pytest.mark.skip()
 def test_observation(camera, images_dir):
     """
     Tests functionality of take_observation()
@@ -507,6 +490,7 @@ def test_observation(camera, images_dir):
         os.remove(_)
 
 
+@pytest.mark.skip()
 def test_observation_nofilter(camera, images_dir):
     """
     Tests functionality of take_observation()
