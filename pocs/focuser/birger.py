@@ -338,6 +338,8 @@ class Focuser(AbstractFocuser):
 
         # In verbose mode adaptor will first echo the command
         echo = self._serial_io.readline().rstrip()
+        print(command)
+        print(echo)
         assert echo == command, self.logger.warning("echo != command: {} != {}".format(
             echo, command))
 
