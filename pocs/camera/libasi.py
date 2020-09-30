@@ -500,12 +500,14 @@ class ASIDriver(AbstractSDKDriver):
 
     def _call_function(self, function_name, camera_ID, *args):
         """ Utility function for calling the SDK functions that return ErrorCode """
+        self.logger.debug(f"Calling {function_name} on {camera_ID}.")
         function = getattr(self._CDLL, function_name)
         error_code = function(ctypes.c_int(camera_ID), *args)
         if error_code != ErrorCode.SUCCESS:
             msg = "Error calling {}: {}".format(function_name, ErrorCode(error_code).name)
             self.logger.error(msg)
             raise RuntimeError(msg)
+        self.logger.debug(f"Successfully called {function_name} on {camera_ID}.")
 
     def _parse_info(self, camera_info):
         """ Utility function to parse CameraInfo Structures into something more Pythonic """
