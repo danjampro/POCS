@@ -90,6 +90,9 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
         self._exposure_event.set()
         self._is_exposing = False
 
+        # By default assume camera isn't capable of internal darks.
+        self._internal_darks = kwargs.get('internal_darks', False)
+
         for subcomponent_class in self._subcomponent_classes:
             self._create_subcomponent(subcomponent=kwargs.get(subcomponent_class.casefold()),
                                       class_name=subcomponent_class)
@@ -264,6 +267,17 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
 
         return True
 
+    @property
+    def can_take_internal_darks(self):
+        """ True if the camera can take internal dark exposures.
+        This will be true of cameras that have an internal mechanical shutter and can
+        be commanded to keep that shutter closed during the exposure. For cameras that
+        either lack a mechanical shutter or lack the option to keep it closed light must
+        be kept out of the camera during dark exposures by other means, e.g. an opaque
+        blank in a filterwheel, a lens cap, etc.
+        """
+        return self._internal_darks
+
 ##################################################################################################
 # Methods
 ##################################################################################################
@@ -352,6 +366,21 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
         assert self.is_connected, self.logger.error("Camera must be connected for take_exposure!")
 
         assert filename is not None, self.logger.error("Must pass filename for take_exposure")
+
+        if not self.can_take_internal_darks:
+            if dark:
+                try:
+                    # Can't take internal dark, so try using an opaque filter in a filterwheel
+                    self.filterwheel.move_to_dark_position(blocking=True)
+                    self.logger.debug("Taking dark exposure using filter '"
+                                      f"{self.filterwheel.filter_name(self.filterwheel._dark_position)}'.")
+                except (AttributeError, error.NotFound):
+                    # No filterwheel, or no opaque filter (dark_position not set)
+                    self.logger.warning("Taking dark exposure without shutter or opaque filter. Is the lens cap on?")
+            else:
+                with suppress(AttributeError, error.NotFound):
+                    # Ignoring exceptions from no filterwheel, or no last light position
+                    self.filterwheel.move_to_light_position(blocking=True)
 
         # Check that the camera (and subcomponents) is ready
         if not self.is_ready:
