@@ -98,11 +98,11 @@ def mask_saturated(data, saturation_level=None, threshold=0.9, bit_depth=None, d
                                              f"got {bit_depth!r}")
 
             bit_depth = int(bit_depth)
-            logger.trace(f"Using bit depth {bit_depth!r}")
+            logger.debug(f"Using bit depth {bit_depth!r}")
             saturation_level = threshold * (2**bit_depth - 1)
         else:
             # No bit depth specified, try to guess.
-            logger.trace(f"Inferring bit_depth from data type, {data.dtype!r}")
+            logger.debug(f"Inferring bit_depth from data type, {data.dtype!r}")
             try:
                 # Try to use np.iinfo to compute machine limits. Will work for integer types.
                 saturation_level = threshold * np.iinfo(data.dtype).max
