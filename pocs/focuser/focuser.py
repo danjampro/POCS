@@ -1,4 +1,5 @@
 import os
+import gc
 from abc import ABCMeta
 from abc import abstractmethod
 from threading import Event
@@ -524,7 +525,10 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
             fig.savefig(plot_path, transparent=False)
 
             # explicitly close and delete figure
+            plt.cla()
+            plt.clf()
             plt.close(fig)
+            gc.collect()
 
             self.logger.info('{} focus plot for camera {} written to {}'.format(
                 focus_type.capitalize(), self._camera, plot_path))
