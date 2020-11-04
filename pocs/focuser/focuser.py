@@ -4,9 +4,9 @@ from abc import abstractmethod
 from threading import Event
 from threading import Thread
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
+import matplotlib
 import matplotlib.colors as colours
+import matplotlib.pyplot as plt
 
 import numpy as np
 from scipy.ndimage import binary_dilation
@@ -17,6 +17,8 @@ from pocs.base import PanBase
 from pocs.utils import current_time
 from pocs.utils.images import focus as focus_utils
 from pocs.utils.images import get_palette
+
+matplotlib.use("agg")
 
 
 class AbstractFocuser(PanBase, metaclass=ABCMeta):
@@ -481,9 +483,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
                 initial_thumbnail = initial_thumbnail - dark_thumb
                 final_thumbnail = final_thumbnail - dark_thumb
 
-            fig = Figure()
-            FigureCanvas(fig)
-            fig.set_size_inches(9, 18)
+            fig = plt.figure(figsize=(9, 18))
 
             ax1 = fig.add_subplot(3, 1, 1)
             im1 = ax1.imshow(initial_thumbnail, interpolation='none',
@@ -524,8 +524,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
             fig.savefig(plot_path, transparent=False)
 
             # explicitly close and delete figure
-            fig.clf()
-            del fig
+            plt.close(fig)
 
             self.logger.info('{} focus plot for camera {} written to {}'.format(
                 focus_type.capitalize(), self._camera, plot_path))
