@@ -3,10 +3,10 @@ import gc
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-from panoptes.utils.images.plot import get_palette, add_colorbar
-from panoptes.pocs.utils.logger import get_logger
+from pocs.utils.images import get_palette, add_colorbar
+from pocs.utils.logger import get_root_logger
 
-logger = get_logger()
+logger = get_root_logger()
 
 
 def make_autofocus_plot(output_path,
