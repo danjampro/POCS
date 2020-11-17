@@ -573,6 +573,12 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
         image = fits.getdata(file_path)
         if not keep_file:
             os.unlink(file_path)
+
+        # Make sure thumbnail is not bigger than image.
+        actual_thumbnail_size = min(thumbnail_size, *image.shape)
+        if actual_thumbnail_size != thumbnail_size:
+            self.logger.info(f'Requested thumbnail size is smaller than image, using {actual_thumbnail_size}')
+
         thumbnail = img_utils.crop_data(image, box_width=thumbnail_size)
         return thumbnail
 
