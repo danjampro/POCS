@@ -12,9 +12,7 @@ from astropy.modeling import fitting
 from pocs.base import PanBase
 from pocs.utils import current_time
 from pocs.utils.images import focus as focus_utils
-from panoptes.utils.images import mask_saturated
-
-from src.panoptes.pocs.utils.plotting import make_autofocus_plot
+from pocs.utils.plotting import make_autofocus_plot
 
 
 class AbstractFocuser(PanBase, metaclass=ABCMeta):
@@ -342,9 +340,9 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
                                                          keep_file=True,
                                                          dark=True)
                 # Mask 'saturated' with a low threshold to remove hot pixels
-                dark_cutout = mask_saturated(dark_cutout,
-                                             threshold=0.3,
-                                             bit_depth=self.camera.bit_depth)
+                dark_cutout = focus_utils.mask_saturated(dark_cutout,
+                                                         threshold=0.3,
+                                                         bit_depth=self.camera.bit_depth)
             except Exception as err:
                 self.logger.error(f"Error taking dark frame: {err!r}")
                 self._autofocus_error = repr(err)
@@ -357,7 +355,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
 
         try:
             initial_cutout = self._camera.get_thumbnail(seconds, initial_path, cutout_size, keep_file=True)
-            initial_cutout = mask_saturated(initial_cutout, bit_depth=self.camera.bit_depth)
+            initial_cutout = focus_utils.mask_saturated(initial_cutout, bit_depth=self.camera.bit_depth)
             if dark_cutout is not None:
                 initial_cutout = initial_cutout.astype(np.int32) - dark_cutout
         except Exception as err:
@@ -403,7 +401,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
                 focus_event.set()
                 raise err
 
-            masks[i] = mask_saturated(cutout, bit_depth=self.camera.bit_depth).mask
+            masks[i] = focus_utils.mask_saturated(cutout, bit_depth=self.camera.bit_depth).mask
             if dark_cutout is not None:
                 cutout = cutout.astype(np.int32) - dark_cutout
             cutouts[i] = cutout
@@ -480,7 +478,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
         file_path = os.path.join(file_path_root, final_fn)
         try:
             final_cutout = self._camera.get_thumbnail(seconds, file_path, cutout_size, keep_file=True)
-            final_cutout = mask_saturated(final_cutout, bit_depth=self.camera.bit_depth)
+            final_cutout = focus_utils.mask_saturated(final_cutout, bit_depth=self.camera.bit_depth)
             if dark_cutout is not None:
                 final_cutout = final_cutout.astype(np.int32) - dark_cutout
         except Exception as err:
