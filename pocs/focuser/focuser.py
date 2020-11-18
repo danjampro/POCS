@@ -323,7 +323,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
         self.logger.debug(f"Beginning {focus_type} autofocus of {self._camera} - initial position: {initial_focus}")
 
         # Set up paths for temporary focus files, and plots if requested.
-        image_dir = self.get_config('directories.images')
+        image_dir = self.config['directories']['images']
         start_time = current_time(flatten=True)
         file_path_root = os.path.join(image_dir, 'focus', self._camera.uid, start_time)
 
