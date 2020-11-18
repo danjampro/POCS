@@ -163,7 +163,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
                   seconds=None,
                   focus_range=None,
                   focus_step=None,
-                  cutout_size=None,
+                  thumbnail_size=None,
                   keep_files=None,
                   take_dark=None,
                   merit_function=None,
@@ -184,7 +184,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
                 encoder units. Specify to override values from config.
             focus_step (2-tuple, optional): Coarse & fine focus sweep steps, in
                 encoder units. Specify to override values from config.
-            cutout_size (int, optional): Size of square central region of image
+            thumbnail_size (int, optional): Size of square central region of image
                 to use, default 500 x 500 pixels.
             keep_files (bool, optional): If True will keep all images taken
                 during focusing. If False (default) will delete all except the
@@ -237,9 +237,9 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
                 raise ValueError(
                     "No focus exposure time specified, aborting autofocus of {}!", self._camera)
 
-        if not cutout_size:
+        if not thumbnail_size:
             if self.autofocus_size:
-                cutout_size = self.autofocus_size
+                thumbnail_size = self.autofocus_size
             else:
                 raise ValueError(
                     "No focus thumbnail size specified, aborting autofocus of {}!", self._camera)
@@ -280,7 +280,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
             'seconds': seconds,
             'focus_range': focus_range,
             'focus_step': focus_step,
-            'cutout_size': cutout_size,
+            'thumbnail_size': thumbnail_size,
             'keep_files': keep_files,
             'take_dark': take_dark,
             'merit_function': merit_function,
@@ -301,7 +301,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
                    seconds,
                    focus_range,
                    focus_step,
-                   cutout_size,
+                   thumbnail_size,
                    keep_files,
                    take_dark,
                    merit_function,
@@ -336,7 +336,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
             try:
                 dark_cutout = self._camera.get_thumbnail(seconds,
                                                          dark_path,
-                                                         cutout_size,
+                                                         thumbnail_size,
                                                          keep_file=True,
                                                          dark=True)
                 # Mask 'saturated' with a low threshold to remove hot pixels
@@ -354,7 +354,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
         initial_path = os.path.join(file_path_root, initial_fn)
 
         try:
-            initial_cutout = self._camera.get_thumbnail(seconds, initial_path, cutout_size, keep_file=True)
+            initial_cutout = self._camera.get_thumbnail(seconds, initial_path, thumbnail_size, keep_file=True)
             initial_cutout = focus_utils.mask_saturated(initial_cutout, bit_depth=self.camera.bit_depth)
             if dark_cutout is not None:
                 initial_cutout = initial_cutout.astype(np.int32) - dark_cutout
@@ -380,8 +380,8 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
         n_positions = len(focus_positions)
 
         # Set up empty array holders
-        cutouts = np.zeros((n_positions, cutout_size, cutout_size), dtype=initial_cutout.dtype)
-        masks = np.empty((n_positions, cutout_size, cutout_size), dtype=np.bool)
+        cutouts = np.zeros((n_positions, thumbnail_size, thumbnail_size), dtype=initial_cutout.dtype)
+        masks = np.empty((n_positions, thumbnail_size, thumbnail_size), dtype=np.bool)
         metrics = np.empty(n_positions)
 
         # Take and store an exposure for each focus position.
@@ -394,7 +394,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
 
             # Take exposure.
             try:
-                cutout = self._camera.get_thumbnail(seconds, file_path, cutout_size, keep_file=keep_files)
+                cutout = self._camera.get_thumbnail(seconds, file_path, thumbnail_size, keep_file=keep_files)
             except Exception as err:
                 self.logger.error(f"Error taking image {i + 1}: {err!r}")
                 self._autofocus_error = repr(err)
@@ -477,7 +477,7 @@ class AbstractFocuser(PanBase, metaclass=ABCMeta):
         final_fn = f"{final_focus}-{focus_type}-final.{self._camera.file_extension}"
         file_path = os.path.join(file_path_root, final_fn)
         try:
-            final_cutout = self._camera.get_thumbnail(seconds, file_path, cutout_size, keep_file=True)
+            final_cutout = self._camera.get_thumbnail(seconds, file_path, thumbnail_size, keep_file=True)
             final_cutout = focus_utils.mask_saturated(final_cutout, bit_depth=self.camera.bit_depth)
             if dark_cutout is not None:
                 final_cutout = final_cutout.astype(np.int32) - dark_cutout
