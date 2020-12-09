@@ -14,10 +14,11 @@ echo "Setting up local environment in ${PANOPTES_POCS}"
 cd "${PANOPTES_POCS}"
 
 build_develop() {
-  echo "Building local panoptes-pocs:${TAG} from ${UTILS_IMAGE_URL} in ${PANOPTES_POCS}"
+  echo "Building local panoptes-pocs:fix from ${UTILS_IMAGE_URL} in ${PANOPTES_POCS}"
   docker build \
+    --no-cache \
     --build-arg "image_url=${UTILS_IMAGE_URL}" \
-    -t "panoptes-pocs:${TAG}" \
+    -t "panoptes-pocs:fix" \
     -f "${PANOPTES_POCS}/docker/Dockerfile" \
     "${PANOPTES_POCS}"
 }

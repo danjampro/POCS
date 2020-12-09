@@ -280,9 +280,11 @@ class Camera(AbstractSDKCamera):
         return readout_args
 
     def _readout(self, filename, width, height, header):
+        self.logger.debug("~~~ Readout: Getting exposure status")
         exposure_status = Camera._driver.get_exposure_status(self._handle)
         if exposure_status == 'SUCCESS':
             try:
+                self.logger.debug("~~~ Readout: Getting image data")
                 image_data = Camera._driver.get_exposure_data(self._handle,
                                                               width,
                                                               height,
@@ -292,10 +294,12 @@ class Camera(AbstractSDKCamera):
             else:
                 # Fix 'raw' data scaling by changing from zero padding of LSBs
                 # to zero padding of MSBs.
+                self.logger.debug("~~~ Readout: Scaling image data")
                 if self.image_type == 'RAW16':
                     pad_bits = 16 - int(get_quantity_value(self.bit_depth, u.bit))
                     image_data = np.right_shift(image_data, pad_bits)
 
+                self.logger.debug("~~~ Readout: Writing image to file")
                 fits_utils.write_fits(data=image_data,
                                       header=header,
                                       filename=filename)
@@ -306,6 +310,8 @@ class Camera(AbstractSDKCamera):
         else:
             raise error.PanError("Unexpected exposure status on {}: '{}'".format(
                 self, exposure_status))
+
+        self.logger.debug("~~~ Readout: Finishing")
 
     def _create_fits_header(self, seconds, dark):
         header = super()._create_fits_header(seconds, dark)

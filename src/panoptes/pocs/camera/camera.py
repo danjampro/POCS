@@ -484,13 +484,16 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
 
         self.logger.debug(f'Taking seconds={seconds!r} exposure on {self.name}: filename={filename!r}')
 
+        self.logger.debug("~~~ Creating fits header")
         header = self._create_fits_header(seconds, dark)
 
+        self.logger.debug("~~~ Checking is_exposing")
         if self.is_exposing:
             err = error.PanError(f"Attempt to take exposure on {self} while one already in progress.")
             self._exposure_error = repr(err)
             raise err
 
+        self.logger.debug("~~~ Starting exposure")
         try:
             # Camera type specific exposure set up and start
             self._is_exposing_event.set()
@@ -502,10 +505,12 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
             raise err
 
         # Start polling thread that will call camera type specific _readout method when done
+        self.logger.debug("~~~ Starting readout thread")
         readout_thread = threading.Thread(target=self._poll_exposure, args=(readout_args,))
         readout_thread.start()
 
         if blocking:
+            self.logger.debug("~~~ Blocking on readout thread")
             self.logger.debug(f"Blocking on exposure event for {self}")
             readout_thread.join()
             while self.is_exposing:
@@ -514,6 +519,8 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
             while not os.path.exists(filename):
                 time.sleep(0.1)
             self.logger.debug(f"Blocking complete on {self} for filename={filename!r}")
+        else:
+            self.logger.debug("~~~ Not blocking on readout thread")
 
         return readout_thread
 

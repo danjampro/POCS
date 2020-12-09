@@ -1,4 +1,4 @@
-ARG image_url=gcr.io/panoptes-exp/panoptes-utils:latest
+ARG image_url=gcr.io/panoptes-exp/panoptes-utils:develop
 FROM ${image_url} AS pocs-base
 
 LABEL description="Installs the panoptes-pocs module from GitHub. \
