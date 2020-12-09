@@ -143,7 +143,9 @@ class Camera(AbstractSDKCamera):
     @property
     def is_exposing(self):
         """ True if an exposure is currently under way, otherwise False """
-        return Camera._driver.get_exposure_status(self._handle) == "WORKING"
+        status = Camera._driver.get_exposure_status(self._handle)
+        self.logger.debug(f"~~~ {status}")
+        return status == "WORKING"
 
     # Methods
 
@@ -310,6 +312,7 @@ class Camera(AbstractSDKCamera):
         else:
             raise error.PanError("Unexpected exposure status on {}: '{}'".format(
                 self, exposure_status))
+        self.logger.debug(f"~~~ Readou status: {exposure_status}")
 
         self.logger.debug("~~~ Readout: Finishing")
 
