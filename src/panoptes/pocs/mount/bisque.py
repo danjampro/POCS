@@ -129,6 +129,8 @@ class Mount(AbstractMount):
             # Get coordinate format from mount specific class
             mount_coords = self._skycoord_to_mount_coord(coords)
 
+            self.logger.debug("Setting target mount coordinates: {}".format(mount_coords))
+
             # Send coordinates to mount
             try:
                 response = self.query('set_target_coordinates', {
@@ -172,6 +174,7 @@ class Mount(AbstractMount):
             mount_coords = self._skycoord_to_mount_coord(self._target_coordinates)
 
             # Send coordinates to mount
+            self.logger.info(f"Slewing to mount coords: {mount_coords}")
             try:
                 response = self.query('slew_to_coordinates', {
                     'ra': mount_coords[0],
@@ -181,6 +184,8 @@ class Mount(AbstractMount):
                 if success:
                     while self.is_slewing:
                         time.sleep(2)
+                else:
+                    self.logger.warning(f"Slewing was unsuccessful!")
 
             except Exception as e:
                 self.logger.warning(f"Problem slewing to mount coordinates: {mount_coords} {e}")
@@ -306,6 +311,8 @@ class Mount(AbstractMount):
             self.logger.warning("Error: {}".format(e, response))
         except json.JSONDecodeError as e:
             response_obj = {"response": response, "success": False, "error": e}
+
+        self.logger.debug(f"Mount response: {response_obj}")
 
         return response_obj
 
