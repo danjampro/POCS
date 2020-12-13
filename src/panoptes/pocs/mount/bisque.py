@@ -157,7 +157,7 @@ class Mount(AbstractMount):
     # Movement methods
     ##########################################################################
 
-    def slew_to_target(self, timeout=120, **kwargs):
+    def slew_to_target(self, timeout=120, check=True, **kwargs):
         """ Slews to the current _target_coordinates
 
         Returns:
@@ -182,7 +182,10 @@ class Mount(AbstractMount):
                 }, timeout=timeout)
                 success = response['success']
                 if success:
-                    while self.is_slewing:
+                    while True:
+                        self._update_status()
+                        if not self.is_slewing:
+                            break
                         time.sleep(2)
                 else:
                     self.logger.warning(f"Slewing was unsuccessful!")
@@ -190,12 +193,13 @@ class Mount(AbstractMount):
             except Exception as e:
                 self.logger.warning(f"Problem slewing to mount coordinates: {mount_coords} {e}")
 
-            if success:
-                if not self.query('start_tracking')['success']:
-                    self.logger.warning("Tracking not turned on for target")
-                    self._is_tracking = True
-                else:
-                    self.logger.debug("Now tracking at target")
+            if check:
+                if success:
+                    if not self.query('start_tracking')['success']:
+                        self.logger.warning("Tracking not turned on for target")
+                        self._is_tracking = True
+                    else:
+                        self.logger.debug("Now tracking at target")
 
         return success
 
