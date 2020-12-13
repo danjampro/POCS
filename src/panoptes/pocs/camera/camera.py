@@ -502,7 +502,9 @@ class AbstractCamera(PanBase, metaclass=ABCMeta):
             raise err
 
         # Start polling thread that will call camera type specific _readout method when done
-        readout_thread = threading.Thread(target=self._poll_exposure, args=(readout_args,))
+        readout_thread = threading.Timer(interval=get_quantity_value(seconds, unit=u.second),
+                                         function=self._poll_exposure,
+                                         args=(readout_args,))
         readout_thread.start()
 
         if blocking:
